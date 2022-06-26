@@ -8,7 +8,7 @@ from torchvision import transforms
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from torchvision.utils import save_image
-
+import sys
 import wandb
 
 PROJ_ROOT = os.path.abspath(os.path.join(os.pardir))
@@ -28,7 +28,9 @@ config = {
     "condition_step": 10,
     "save_checkpoint": True,
     "save_images": True,
-    "epochs": 150
+    "epochs": 150,
+    "load_checkpoint": False,
+    "checkpoint_file_name": "checkpoint.pth"
 }
 
 def initialise_model(configurations): # configurations passed here will be wandb.config file
@@ -55,6 +57,21 @@ def initialise_model(configurations): # configurations passed here will be wandb
     initialised = (generator_AB, generator_BA, discriminator_A, discriminator_B, optimiser_generator,
                    optimiser_discriminator, adversarial_loss, l1_loss)
 
+    checkpoint_file = configurations.checkpoint_file_name
+    try:
+        if configurations.load_checkpoint:
+            print(f"==> Loading checkpoint: {checkpoint_file}")
+            loaded_checkpoint = torch.load(checkpoint_file, map_location=config["device"])
+            generator_AB.load_state_dict(loaded_checkpoint["generator_AB"]),
+            generator_BA.load_state_dict(loaded_checkpoint["generator_BA"]),
+            discriminator_A.load_state_dict(loaded_checkpoint["discriminator_A"]),
+            discriminator_B.load_state_dict(loaded_checkpoint["discriminator_B"]),
+            optimiser_generator.load_state_dict(loaded_checkpoint["optimiser_generator"]),
+            optimiser_discriminator.load_state_dict(loaded_checkpoint["optimiser_discriminator"])
+            print("==> Checkpoint successfully loaded.")
+    except FileNotFoundError:
+        print(f"==> Checkpoint '{checkpoint_file}' does not exist. Re-run with correct configurations.")
+        sys.exit(1)
     return initialised
 
 def initialise_dataloader(configurations, kind):
@@ -73,17 +90,6 @@ def initialise_dataloader(configurations, kind):
     dataloader = DataLoader(dataset, batch_size=configurations.batch_size, shuffle=True)
     return dataloader
 
-load_checkpoint = False
-checkpoint_file = "checkpoint.pth"
-if load_checkpoint:
-    print(f"Loading checkpoint: {checkpoint_file}")
-    loaded_checkpoint = torch.load(checkpoint_file, map_location=config["device"])
-    generator_AB.load_state_dict(loaded_checkpoint["generator_AB"]),
-    generator_BA.load_state_dict(loaded_checkpoint["generator_BA"]),
-    discriminator_A.load_state_dict(loaded_checkpoint["discriminator_A"]),
-    discriminator_B.load_state_dict(loaded_checkpoint["discriminator_B"]),
-    optimiser_generator.load_state_dict(loaded_checkpoint["optimiser_generator"]),
-    optimiser_discriminator.load_state_dict(loaded_checkpoint["optimiser_discriminator"])
 
 
 def compute_discriminator_loss(real_imgA, fake_imgA, discriminatorA, adversarial_loss):
@@ -120,15 +126,6 @@ def compute_generator_losses_one_path(real_imgA, discriminatorB, generatorAB, ge
     identity_loss_AB = compute_generator_identity_loss(real_imgA, generatorBA, l1_loss)
     cycle_consistency_loss_BAB = compute_cycle_consistency_loss(real_imgA, fake_imgB, generatorBA, l1_loss)
     return generator_adversarial_loss_AB, identity_loss_AB, cycle_consistency_loss_BAB
-
-
-# device = 'cpu'
-# lambda_cycle = 1
-# lambda_identity = 1
-# step = 0
-# condition_step = 2
-# save_checkpoint = False
-# save_images = True
 
 
 def train(generator_AB, generator_BA, discriminator_A, discriminator_B, optimiser_generator, optimiser_discriminator ,dataloader, configurations,
@@ -181,7 +178,7 @@ def train(generator_AB, generator_BA, discriminator_A, discriminator_B, optimise
 
 
             if step % configurations.condition_step == 0:
-                print(f" Epoch: {epoch}  |  Step: {step}  | Discriminator Loss: {discriminator_loss:.2f}  |  "
+                print(f"\nEpoch: {epoch} | Step: {step} | Discriminator Loss: {discriminator_loss:.2f} | "
                       f"Generator Loss: {generator_loss:.2f}")
                 wandb.log({"epoch": epoch, "discriminator_loss": discriminator_loss, "generator_loss": generator_loss}, step=step)
 
@@ -190,7 +187,7 @@ def train(generator_AB, generator_BA, discriminator_A, discriminator_B, optimise
                     save_image(fake_imgB * 0.5 + 0.5, f"saved_images/{idx}_imgB_fake.png")
 
                 if configurations.save_checkpoint:
-                    print(f"Saving a checkpoint, Epoch: {epoch}, Step: {step}")
+                    print(f"==> Saving a checkpoint, Epoch: {epoch}, Step: {step}")
                     checkpoint = {
                         "generator_AB": generator_AB.state_dict(),
                         "generator_BA": generator_BA.state_dict(),
