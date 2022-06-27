@@ -18,8 +18,7 @@ class ConvolutionBlock(nn.Module):
                  kernel_size: int,
                  stride: int,
                  padding: int) -> None:
-        """
-        Initialises the convolutional block (convolutional layer, instance normalisation, and ReLU) instance.
+        """Initialises the convolutional block (convolutional layer, instance normalisation, and ReLU) instance.
 
         Args:
             in_channels: Number of channels in the input image.
@@ -36,8 +35,7 @@ class ConvolutionBlock(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """
-        Performs a forward pass through the convolution block using an input image, x.
+        """Performs a forward pass through the convolution block using an input image, x.
 
         Args:
             x: A torch tensor of the image to be passed through the convolutional block.
@@ -45,8 +43,8 @@ class ConvolutionBlock(nn.Module):
         Returns:
             A torch tensor of the output of the convolutional block.
         """
-        # print("conv", self.block(x).size())
         return self.block(x)
+
 
 class FractionalStridedConvBlock(nn.Module):
     """Performs a 2D transposed convolution followed by an instance normalisation and a ReLU activation on an image."""
@@ -54,8 +52,7 @@ class FractionalStridedConvBlock(nn.Module):
                  out_channels: int,
                  kernel_size: int,
                  stride: int) -> None:
-        """
-        Initialises the fractional strided convolutional block (convolutional layer, instance normalisation, and
+        """Initialises the fractional strided convolutional block (convolutional layer, instance normalisation, and
         ReLU) instance.
 
         Args:
@@ -72,8 +69,7 @@ class FractionalStridedConvBlock(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """
-        Performs a forward pass through the fractional strided convolutional block using an input image, x.
+        """Performs a forward pass through the fractional strided convolutional block using an input image, x.
 
         Args:
             x: A torch tensor of the image to be passed through the convolutional block.
@@ -81,17 +77,15 @@ class FractionalStridedConvBlock(nn.Module):
         Returns:
             A torch tensor of the output of the convolutional block.
         """
-        # print("conv", self.block(x).size())
-        # print("FractionalStridedConvBlock", self.block(x).size())
         return self.block(x)
+
 
 class ResidualBlock(nn.Module):
     """A residual block to be used in the Discriminator."""
     def __init__(self,
                  in_channels: int,
                  out_channels: int) -> None:
-        """
-        Initialises the residual block.
+        """Initialises the residual block.
 
         Args:
             in_channels: Number of channels in the input image.
@@ -108,8 +102,7 @@ class ResidualBlock(nn.Module):
 
     def forward(self,
                 x: torch.Tensor) -> torch.Tensor:
-        """
-        Performs a forward pass through the residual block using an input image, x.
+        """Performs a forward pass through the residual block using an input image, x.
 
         Args:
             x: A torch tensor of the image to be passed through the residual block.
@@ -120,16 +113,15 @@ class ResidualBlock(nn.Module):
         """
         original_input = x.clone()
         k = original_input + self.residual(x)
-        # print("Residual:", f"x size: {x.size()}", f"k size: {k.size()}")
         return original_input + self.residual(x)
+
 
 class Generator(nn.Module):
     """The Generator used in CycleGAN."""
     def __init__(self,
                  in_channels: int,
                  inter_channels: int = 64) -> None:
-        """
-        Initialises the Generator.
+        """Initialises the Generator.
 
         The Generator is made up with ConvolutionBlock's, ResidualBlock's, FractionalStridedConvBlock's and an
         output 2D convolutional layer.
@@ -156,12 +148,10 @@ class Generator(nn.Module):
             ('u128', FractionalStridedConvBlock(inter_channels * 4, inter_channels * 2, 3, 2)),  # 256, 128
             ('u64', FractionalStridedConvBlock(inter_channels * 2, inter_channels, 3, 2)),  # 128, 64
             ('c7s1-3', nn.Conv2d(inter_channels, in_channels, 7, 1, 3))
-            # in_channels, out_channels, kernel_size, stride)
         ]))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """
-        Performs a forward pass through the Generator using an input image, x.
+        """Performs a forward pass through the Generator using an input image, x.
 
         Args:
             x: A torch tensor of the image to be passed through the Generator.
@@ -175,84 +165,84 @@ class Generator(nn.Module):
         return torch.tanh(X)
 
 if __name__ == "__main__":
-    pass
-    from datasets import ImageDataset
-    import config
-    import os
-    from torchvision import transforms
-
-    target_shape = 256
-    tr = transforms.Compose([
-        transforms.RandomCrop(target_shape),
-        transforms.ToTensor()
-    ])
+    # pass
+    # from datasets import ImageDataset
+    # import config
+    # import os
+    # from torchvision import transforms
     #
-    path = os.path.join(config.DATA_DIR, "horse2zebra")
-    dataset = ImageDataset(path=path, kind="test", transform=tr)
-    test_image = dataset[0][0]
-
-
-
-    # in_channels = dataset[0][0].size()[0]
+    # target_shape = 256
+    # tr = transforms.Compose([
+    #     transforms.RandomCrop(target_shape),
+    #     transforms.ToTensor()
+    # ])
+    # #
+    # path = os.path.join(config.DATA_DIR, "horse2zebra")
+    # dataset = ImageDataset(path=path, kind="test", transform=tr)
+    # test_image = dataset[0][0]
     #
-    convblock = ConvolutionBlock(3, 3, kernel_size=3, stride=2, padding=1)
-    new_image = convblock.forward(test_image)
-    print(type(new_image))
-    print("----")
-    inter_channels = 64
-    fake = torch.rand(inter_channels * 4, 256, 256)
-    fractional = FractionalStridedConvBlock(inter_channels * 4, inter_channels * 2, 3, 2)
-    print(type(fractional.forward(fake)))
-    # print(new_image.size())
     #
-    resblock = ResidualBlock(new_image.size()[0], 3)
-    res = resblock.forward(new_image)
-    print("res")
-    print(res)
     #
-    # inpprocess = InputOutputProcessing(in_channels, out_channels=64)
-    # img_ready = inpprocess(test_image)
-    # inprocess2 = InputOutputProcessing(64, 3)
-    # img2 = inprocess2(img_ready)
-    # print(img_ready.size())
-    # print(img2.size())
-    #
-    # rand_image = torch.rand(256,256,256)
-    # frac = FractionalStridedConvBlock(256, 3, 3, 2)
-    # ki = frac.forward(rand_image)
-    # print(ki.size())
-    # from PIL import Image
-    # import torchvision.transforms as transforms
-    # tr = transforms.ToPILImage()
-    # imgg = tr(ki)
-    # imgg.show()
-
-    # rand_image2 =
-    # genny = Generator(3)
-    # genny.forward(test_image)
-    # print("here")
-    # print(test_image.size())
-    # outss = genny(test_image)
-    # import torchvision.transforms as transforms
-    # tr = transforms.ToPILImage()
-    # imgg = tr(outss)
-    # imgg.show()
-    # # test_image.show()
-    #
-    # imggorig = tr(test_image)
-    # imggorig.show()
-
-
-    # print(outss)
-    # ResidualBlock(inter_channels * 4, inter_channels * 4, 3, 1)
+    # # in_channels = dataset[0][0].size()[0]
+    # #
+    # convblock = ConvolutionBlock(3, 3, kernel_size=3, stride=2, padding=1)
+    # new_image = convblock.forward(test_image)
+    # print(type(new_image))
+    # print("----")
     # inter_channels = 64
-    # resblock_test = ResidualBlock(inter_channels * 4, inter_channels * 4, 3, 2)
-    # img_test_torch = torch.rand(inter_channels * 4, 256, 256)
-    # resblock_test(img_test_torch)
-
-    # CHECK HOW THE SHAPE IS CHANGING FOR when I put something into the residual block
-    # the residual convolutional layers should not change the shape/dimensions
-    # currently dimensions are changed because of convolution layer so it cannot be added to the original image
+    # fake = torch.rand(inter_channels * 4, 256, 256)
+    # fractional = FractionalStridedConvBlock(inter_channels * 4, inter_channels * 2, 3, 2)
+    # print(type(fractional.forward(fake)))
+    # # print(new_image.size())
+    # #
+    # resblock = ResidualBlock(new_image.size()[0], 3)
+    # res = resblock.forward(new_image)
+    # print("res")
+    # print(res)
+    # #
+    # # inpprocess = InputOutputProcessing(in_channels, out_channels=64)
+    # # img_ready = inpprocess(test_image)
+    # # inprocess2 = InputOutputProcessing(64, 3)
+    # # img2 = inprocess2(img_ready)
+    # # print(img_ready.size())
+    # # print(img2.size())
+    # #
+    # # rand_image = torch.rand(256,256,256)
+    # # frac = FractionalStridedConvBlock(256, 3, 3, 2)
+    # # ki = frac.forward(rand_image)
+    # # print(ki.size())
+    # # from PIL import Image
+    # # import torchvision.transforms as transforms
+    # # tr = transforms.ToPILImage()
+    # # imgg = tr(ki)
+    # # imgg.show()
+    #
+    # # rand_image2 =
+    # # genny = Generator(3)
+    # # genny.forward(test_image)
+    # # print("here")
+    # # print(test_image.size())
+    # # outss = genny(test_image)
+    # # import torchvision.transforms as transforms
+    # # tr = transforms.ToPILImage()
+    # # imgg = tr(outss)
+    # # imgg.show()
+    # # # test_image.show()
+    # #
+    # # imggorig = tr(test_image)
+    # # imggorig.show()
     #
     #
+    # # print(outss)
+    # # ResidualBlock(inter_channels * 4, inter_channels * 4, 3, 1)
+    # # inter_channels = 64
+    # # resblock_test = ResidualBlock(inter_channels * 4, inter_channels * 4, 3, 2)
+    # # img_test_torch = torch.rand(inter_channels * 4, 256, 256)
+    # # resblock_test(img_test_torch)
     #
+    # # CHECK HOW THE SHAPE IS CHANGING FOR when I put something into the residual block
+    # # the residual convolutional layers should not change the shape/dimensions
+    # # currently dimensions are changed because of convolution layer so it cannot be added to the original image
+    # #
+    # #
+    # #

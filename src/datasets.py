@@ -5,6 +5,7 @@ from PIL import Image
 from torch.utils.data import Dataset
 
 # TODO Download option for multiple datasets.. it could be a function within the class and use if conditionals
+# TODO bash script to download datasets?
 class ImageDataset(Dataset):
     def __init__(self, path, kind, transform=None):
         # Path input here should be /Users/ammar/OneDrive/Oxford/TT 22/Python-special-topic/CycleGAN/data/horse2zebra
@@ -27,21 +28,22 @@ class ImageDataset(Dataset):
         return self.length
 
 if __name__ == "__main__":
-    from torchvision.utils import save_image
-    from torchvision import transforms
-    target_shape = 256
-    tr = transforms.Compose([
-        transforms.RandomCrop(target_shape),
-        transforms.ToTensor()
-    ])
-
-    PROJ_ROOT = os.path.abspath(os.path.join(os.pardir))
-    DATA_DIR = os.path.join(PROJ_ROOT, "data")
-    path = os.path.join(DATA_DIR, "horse2zebra")
-
-    dataset = ImageDataset(path=path, kind="test", transform=tr)
-    save_image(dataset[0][0],  f"saved_images/image1.png")
-    save_image(dataset[0][1], f"saved_images/image2.png")
+    pass
+    # from torchvision.utils import save_image
+    # from torchvision import transforms
+    # target_shape = 256
+    # tr = transforms.Compose([
+    #     transforms.RandomCrop(target_shape),
+    #     transforms.ToTensor()
+    # ])
+    #
+    # PROJ_ROOT = os.path.abspath(os.path.join(os.pardir))
+    # DATA_DIR = os.path.join(PROJ_ROOT, "data")
+    # path = os.path.join(DATA_DIR, "horse2zebra")
+    #
+    # dataset = ImageDataset(path=path, kind="test", transform=tr)
+    # save_image(dataset[0][0],  f"saved_images/image1.png")
+    # save_image(dataset[0][1], f"saved_images/image2.png")
     # lenght_d = dataset.length
     # in_channels = dataset[0][0].size()[0]
     # print(dataset[1][0].size())

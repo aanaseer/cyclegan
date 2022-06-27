@@ -10,6 +10,7 @@ from collections import OrderedDict
 import torch
 from torch import nn
 
+
 class ConvolutionBlock(nn.Module):
     """Performs a 2D convolution followed by an instance normalisation and a LeakyReLU activation on an image."""
     def __init__(self,
@@ -17,8 +18,7 @@ class ConvolutionBlock(nn.Module):
                  out_channels: int,
                  stride: int,
                  instnorm: bool) -> None:
-        """
-        Initialises the convolutional block (convolutional layer, instance normalisation, and LeakyReLU) instance.
+        """Initialises the convolutional block (convolutional layer, instance normalisation, and LeakyReLU) instance.
 
         Args:
             in_channels: Number of channels in the input image.
@@ -37,8 +37,7 @@ class ConvolutionBlock(nn.Module):
 
     def forward(self,
                 x: torch.Tensor) -> torch.Tensor:
-        """
-        Performs a forward pass through the convolution block using an input image, x.
+        """Performs a forward pass through the convolution block using an input image, x.
 
         Args:
             x: A torch tensor of the image to be passed through the convolutional block.
@@ -47,16 +46,15 @@ class ConvolutionBlock(nn.Module):
             A torch tensor of the output of the convolutional block.
 
         """
-        # print("conv", self.block(x).size())
         return self.block(x)
+
 
 class Discriminator(nn.Module):
     """The Discriminator used in the CycleGAN."""
     def __init__(self,
                  in_channels: int,
                  inter_channels: int = 64) -> None:  # inter_channels = 64
-        """
-        Initialises the Discriminator.
+        """Initialises the Discriminator.
 
         The Discriminator is made up with four ConvolutionBlock's and an output 2D convolutional layer.
 
@@ -76,8 +74,7 @@ class Discriminator(nn.Module):
 
     def forward(self,
                 x: torch.Tensor) -> torch.Tensor:
-        """
-        Performs a forward pass through the Discriminator using an input image, x.
+        """Performs a forward pass through the Discriminator using an input image, x.
 
         Args:
             x: A torch tensor of the image to be passed through the Discriminator.
@@ -86,7 +83,8 @@ class Discriminator(nn.Module):
             A torch tensor of the output from the Discriminator.
 
         """
-        return self.disc(x) # DO I NEED A SIGMOID HERE??
+        return self.disc(x)  # DO I NEED A SIGMOID HERE??
+
 
 if __name__ == "__main__":
 
