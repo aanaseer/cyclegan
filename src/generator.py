@@ -165,6 +165,7 @@ class Generator(nn.Module):
         return torch.tanh(X)
 
 if __name__ == "__main__":
+    pass
     # pass
     # from datasets import ImageDataset
     # import config

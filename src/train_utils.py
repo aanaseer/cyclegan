@@ -312,8 +312,8 @@ def train(generator_AB: Generator,
                 if configurations.save_images:
                     # ox_path = "/home/naseer/cyclegan-mmsc-special-topic/src/saved_images/"
                     # ox_path = "saved_images/"
-                    save_image(fake_imgA * 0.5 + 0.5, f"saved_images/{epoch}_{step}_imgA_fake.png")
-                    save_image(fake_imgB * 0.5 + 0.5, f"saved_images/{epoch}_{step}_imgB_fake.png")
+                    save_image(fake_imgA * 0.5 + 0.5, f"/home/naseer/cyclegan-mmsc-special-topic/src/saved_images/{epoch}_{step}_imgA_fake.png")
+                    save_image(fake_imgB * 0.5 + 0.5, f"/home/naseer/cyclegan-mmsc-special-topic/src/saved_images/{epoch}_{step}_imgB_fake.png")
 
                 if configurations.save_checkpoint:
                     print(f"==> Saving a checkpoint, Epoch: {epoch}, Step: {step}")

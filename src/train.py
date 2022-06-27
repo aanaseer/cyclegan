@@ -7,6 +7,7 @@ from train_utils import initiate_pipeline
 
 PROJ_ROOT = os.path.abspath(os.path.join(os.pardir))
 DATA_DIR = os.path.join(PROJ_ROOT, "data")
+DATA_DIR = "/home/naseer/cyclegan-mmsc-special-topic/data"
 
 config = {
     "dataset_name": "horse2zebra",
@@ -19,8 +20,8 @@ config = {
     "batch_size": 1,
     "lambda_cycle": 10,
     "lambda_identity": 0.1,
-    "condition_step": 1,
-    "save_checkpoint": False,
+    "condition_step": 200,
+    "save_checkpoint": True,
     "save_images": True,
     "epochs": 150,
     "load_checkpoint": False,
