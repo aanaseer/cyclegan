@@ -3,13 +3,23 @@ import os
 import glob
 from PIL import Image
 from torch.utils.data import Dataset
+import torchvision
 
 # TODO Download option for multiple datasets.. it could be a function within the class and use if conditionals
 # TODO bash script to download datasets?
 class ImageDataset(Dataset):
-    def __init__(self, path, kind, transform=None):
-        # Path input here should be /Users/ammar/OneDrive/Oxford/TT 22/Python-special-topic/CycleGAN/data/horse2zebra
-        # kind is either train or test
+    """Creates a data set to be used for either training or testing."""
+    def __init__(self,
+                 path: str,
+                 kind: str,
+                 transform: torchvision.transforms.transforms.Compose = None) -> None:
+        """Initialises the data set.
+
+        Args:
+            path: Path to the data set.
+            kind: Either "train" or "test" to decide which data files to create the data set with.
+            transform: Composition of pytorch transforms to transform the data with.
+        """
         self.transform = transform
         self.path = path
         self.kind = kind
@@ -20,6 +30,14 @@ class ImageDataset(Dataset):
         self.length = min(self.dataA_len, self.dataB_len)
 
     def __getitem__(self, item):
+        """Gets individual items from the data set.
+
+        Args:
+            item:
+
+        Returns:
+
+        """
         imageA = self.transform(Image.open(self.dataA[item % self.dataA_len]).convert('RGB'))
         imageB = self.transform(Image.open(self.dataB[item % self.dataB_len]).convert('RGB'))
         return imageA, imageB
@@ -28,6 +46,7 @@ class ImageDataset(Dataset):
         return self.length
 
 if __name__ == "__main__":
+    # pass
     pass
     # from torchvision.utils import save_image
     # from torchvision import transforms
@@ -37,11 +56,20 @@ if __name__ == "__main__":
     #     transforms.ToTensor()
     # ])
     #
+    # print("transforms", type(tr))
+    # print("--------")
+    #
     # PROJ_ROOT = os.path.abspath(os.path.join(os.pardir))
     # DATA_DIR = os.path.join(PROJ_ROOT, "data")
-    # path = os.path.join(DATA_DIR, "horse2zebra")
-    #
+    # path = os.path.join(DATA_DIR, "vangogh2photo")
+    # print("path ", type(path))
+    # print("--------")
+    # #
+    # #
+    # # #
     # dataset = ImageDataset(path=path, kind="test", transform=tr)
+    # print(type(dataset))
+    # print(dataset[0][0])
     # save_image(dataset[0][0],  f"saved_images/image1.png")
     # save_image(dataset[0][1], f"saved_images/image2.png")
     # lenght_d = dataset.length

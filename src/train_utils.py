@@ -73,7 +73,7 @@ def initialise_model(configurations: wandb.sdk.wandb_config.Config
     try:
         if configurations.load_checkpoint:
             print(f"==> Loading checkpoint: {checkpoint_file}")
-            loaded_checkpoint = torch.load(checkpoint_file, map_location=config["device"])
+            loaded_checkpoint = torch.load(checkpoint_file, map_location=configurations.device)
             generator_AB.load_state_dict(loaded_checkpoint["generator_AB"]),
             generator_BA.load_state_dict(loaded_checkpoint["generator_BA"]),
             discriminator_A.load_state_dict(loaded_checkpoint["discriminator_A"]),
