@@ -7,6 +7,7 @@ import os
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
+from torch.optim.lr_scheduler import LambdaLR
 from torchvision import transforms
 from torchvision.utils import save_image
 
@@ -66,8 +67,17 @@ def initialise_model(configurations: wandb.sdk.wandb_config.Config
         betas=(configurations.beta2, configurations.beta2)
     )
 
+    if configurations.learning_decay:
+        lambda_func = lambda epoch: 1.0 - max(0, epoch - 100) / float(200 - 100)
+        scheduler_generator = LambdaLR(optimiser_generator, lr_lambda=lambda_func)
+        scheduler_discriminator = LambdaLR(optimiser_discriminator, lr_lambda=lambda_func)
+    else:
+        scheduler_generator = None
+        scheduler_discriminator = None
+
+
     initialised = (generator_AB, generator_BA, discriminator_A, discriminator_B, optimiser_generator,
-                   optimiser_discriminator, adversarial_loss, l1_loss)
+                   optimiser_discriminator, adversarial_loss, l1_loss, scheduler_generator, scheduler_discriminator)
 
     checkpoint_file = configurations.checkpoint_file_name
     try:
@@ -235,7 +245,9 @@ def train(generator_AB: Generator,
           dataloader: torch.utils.data.dataloader.DataLoader,
           configurations: wandb.sdk.wandb_config.Config,
           adversarial_loss: torch.nn.modules.loss.MSELoss,
-          l1_loss: torch.nn.modules.loss.L1Loss
+          l1_loss: torch.nn.modules.loss.L1Loss,
+          scheduler_generator,
+          scheduler_discriminator
           ) -> None:
     """Starts the training loop.
 
@@ -257,10 +269,13 @@ def train(generator_AB: Generator,
           "save_checkpoint" - Boolean to require whether to save a checkpoint or not.
         adversarial_loss: An instance of Mean Squared Loss criterion.
         l1_loss: An instance of L1 loss criterion.
+        scheduler_generator:
+        scheduler_discriminator
     """
     wandb.watch(models=(generator_AB, generator_BA, discriminator_A, discriminator_B), log="all", log_freq=1)
     for epoch in range(configurations.epochs):
         step = 0
+        # TODO IMPLEMENT AVG LOSS LOGGING FOR GENERATOR AND DISCRIMINATOR
         for idx, (imgA, imgB) in enumerate(tqdm(dataloader)):
             real_imgA = imgA.to(configurations.device)
             real_imgB = imgB.to(configurations.device)
@@ -281,6 +296,8 @@ def train(generator_AB: Generator,
             optimiser_discriminator.zero_grad()
             discriminator_loss.backward()
             optimiser_discriminator.step()
+            # if configurations.learning_decay:
+            #     scheduler_discriminator.step()
 
             # Generator training
             generator_adversarial_loss_AB, identity_loss_AB, cycle_consistency_loss_BAB = compute_generator_losses_one_path(
@@ -294,26 +311,36 @@ def train(generator_AB: Generator,
             generator_identity_loss = identity_loss_AB + identity_loss_BA
             generator_cycle_consistency_loss = cycle_consistency_loss_ABA + cycle_consistency_loss_BAB
             generator_loss = (
-                generator_adversarial_loss
-                + generator_identity_loss * configurations.lambda_identity
-                + generator_cycle_consistency_loss * configurations.lambda_cycle
+                    generator_adversarial_loss
+                    + generator_identity_loss * configurations.lambda_identity
+                    + generator_cycle_consistency_loss * configurations.lambda_cycle
             )
 
             # Generator gradient updates
             optimiser_generator.zero_grad()
             generator_loss.backward()
             optimiser_generator.step()
+            # if configurations.learning_decay:
+            #     scheduler_generator.step()
 
+            print(f"\nEpoch: {epoch} | Step: {step} | Discriminator Loss: {discriminator_loss:.2f} | "
+                  f"Generator Loss: {generator_loss:.2f}")
+
+            wandb.log({"epoch": epoch, "discriminator_loss": discriminator_loss, "generator_loss": generator_loss})
             if step % configurations.condition_step == 0:
-                print(f"\nEpoch: {epoch} | Step: {step} | Discriminator Loss: {discriminator_loss:.2f} | "
-                      f"Generator Loss: {generator_loss:.2f}")
-                wandb.log({"epoch": epoch, "discriminator_loss": discriminator_loss, "generator_loss": generator_loss}, step=step)
+                # wandb.log({"epoch": epoch, "discriminator_loss": discriminator_loss, "generator_loss": generator_loss}, step=step)
 
                 if configurations.save_images:
                     # ox_path = "/home/naseer/cyclegan-mmsc-special-topic/src/saved_images/"
                     # ox_path = "saved_images/"
-                    save_image(fake_imgA * 0.5 + 0.5, f"/home/naseer/cyclegan-mmsc-special-topic/src/saved_images/{epoch}_{step}_imgA_fake.png")
-                    save_image(fake_imgB * 0.5 + 0.5, f"/home/naseer/cyclegan-mmsc-special-topic/src/saved_images/{epoch}_{step}_imgB_fake.png")
+                    # output_save_dir
+                    IMAGES_OUTPUT_DIR = os.path.join(configurations.output_save_dir, wandb.run.name)
+                    IMG_A_DIR = os.path.join(IMAGES_OUTPUT_DIR,  "images", f"{epoch}_{step}_imgA_fake.png")
+                    IMG_B_DIR = os.path.join(IMAGES_OUTPUT_DIR,  "images", f"{epoch}_{step}_imgB_fake.png")
+                    # SAVE_DIR_A = os.path.join(configurations.output_save_dir, wandb.run.name, f"{epoch}_{step}_imgA_fake.png")
+                    # SAVE_DIR_B = os.path.join(configurations.output_save_dir, wandb.run.name, f"{epoch}_{step}_imgB_fake.png")
+                    save_image(fake_imgA * 0.5 + 0.5, IMG_A_DIR)
+                    save_image(fake_imgB * 0.5 + 0.5, IMG_B_DIR)
 
                 if configurations.save_checkpoint:
                     print(f"==> Saving a checkpoint, Epoch: {epoch}, Step: {step}")
@@ -325,9 +352,23 @@ def train(generator_AB: Generator,
                         "optimiser_generator": optimiser_generator.state_dict(),
                         "optimiser_discriminator": optimiser_discriminator.state_dict()
                     }
-                    torch.save(checkpoint, f"checkpoint.pth")
+                    CHKPOINT_OUTPUT_DIR = os.path.join(configurations.output_save_dir, wandb.run.name, "checkpoints")
+                    CHKPOINT_FILE = os.path.join(CHKPOINT_OUTPUT_DIR, f"{configurations.dataset_name}_{wandb.run.name}_checkpoint.pth")
+                    torch.save(checkpoint, CHKPOINT_FILE)
 
             step += 1
+
+        if configurations.learning_decay:
+            scheduler_discriminator.step()
+            scheduler_generator.step()
+
+
+def initialise_weights(m):
+    if isinstance(m, nn.Conv2d) or isinstance(m, nn.ConvTranspose2d):
+        torch.nn.init.normal_(m.weight, 0.0, 0.02)
+    if isinstance(m, nn.BatchNorm2d):
+        torch.nn.init.normal_(m.weight, 0.0, 0.02)
+        torch.nn.init.constant_(m.bias, 0)
 
 
 def initiate_pipeline(configurations: dict) -> None:
@@ -355,13 +396,21 @@ def initiate_pipeline(configurations: dict) -> None:
     """
     with wandb.init(project="mmsc-python-project", config=configurations, anonymous="allow"):
         config = wandb.config
-        (generator_AB, generator_BA, discriminator_A, discriminator_B, optimiser_generator,
-         optimiser_discriminator, adversarial_loss, l1_loss) = initialise_model(config)
+        (generator_AB, generator_BA, discriminator_A, discriminator_B, optimiser_generator, optimiser_discriminator,
+         adversarial_loss, l1_loss, scheduler_generator, scheduler_discriminator) = initialise_model(config)
 
+        if not config.load_checkpoint:
+            generator_AB = generator_AB.apply(initialise_weights)
+            generator_BA = generator_BA.apply(initialise_weights)
+            discriminator_A = discriminator_A.apply(initialise_weights)
+            discriminator_B = discriminator_B.apply(initialise_weights)
+
+        os.makedirs(f"{config.proj_root}/outputs/{wandb.run.name}/images")
+        os.makedirs(f"{config.proj_root}/outputs/{wandb.run.name}/checkpoints")
         dataloader_train = initialise_dataloader(config, "train")
 
         train(generator_AB, generator_BA, discriminator_A, discriminator_B, optimiser_generator, optimiser_discriminator,
-              dataloader_train, config, adversarial_loss, l1_loss)
+              dataloader_train, config, adversarial_loss, l1_loss, scheduler_generator, scheduler_discriminator)
 
 # TODO check generator losses DONE
 # TODO wrap in WANDB API DONE
@@ -388,7 +437,7 @@ if __name__ == "__main__":
     #     "lambda_cycle": 10,
     #     "lambda_identity": 0.1,
     #     "condition_step": 20,
-    #     "save_checkpoint": True,
+    #     "save_checkpoint": False,
     #     "save_images": True,
     #     "epochs": 150,
     #     "load_checkpoint": False,
