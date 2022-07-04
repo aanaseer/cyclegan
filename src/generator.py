@@ -72,10 +72,10 @@ class FractionalStridedConvBlock(nn.Module):
         """Performs a forward pass through the fractional strided convolutional block using an input image, x.
 
         Args:
-            x: A torch tensor of the image to be passed through the convolutional block.
+            x: A torch tensor of the image to be passed through the fractional strided convolutional block.
 
         Returns:
-            A torch tensor of the output of the convolutional block.
+            A torch tensor of the output of the fractional strided convolutional block.
         """
         return self.block(x)
 
@@ -161,89 +161,4 @@ class Generator(nn.Module):
             activation of tanh is applied to it.
         """
         X = self.gen(x)
-        # print(torch.tanh(X).size())
         return torch.tanh(X)
-
-if __name__ == "__main__":
-    pass
-    # pass
-    # from datasets import ImageDataset
-    # import config
-    # import os
-    # from torchvision import transforms
-    #
-    # target_shape = 256
-    # tr = transforms.Compose([
-    #     transforms.RandomCrop(target_shape),
-    #     transforms.ToTensor()
-    # ])
-    # #
-    # path = os.path.join(config.DATA_DIR, "horse2zebra")
-    # dataset = ImageDataset(path=path, kind="test", transform=tr)
-    # test_image = dataset[0][0]
-    #
-    #
-    #
-    # # in_channels = dataset[0][0].size()[0]
-    # #
-    # convblock = ConvolutionBlock(3, 3, kernel_size=3, stride=2, padding=1)
-    # new_image = convblock.forward(test_image)
-    # print(type(new_image))
-    # print("----")
-    # inter_channels = 64
-    # fake = torch.rand(inter_channels * 4, 256, 256)
-    # fractional = FractionalStridedConvBlock(inter_channels * 4, inter_channels * 2, 3, 2)
-    # print(type(fractional.forward(fake)))
-    # # print(new_image.size())
-    # #
-    # resblock = ResidualBlock(new_image.size()[0], 3)
-    # res = resblock.forward(new_image)
-    # print("res")
-    # print(res)
-    # #
-    # # inpprocess = InputOutputProcessing(in_channels, out_channels=64)
-    # # img_ready = inpprocess(test_image)
-    # # inprocess2 = InputOutputProcessing(64, 3)
-    # # img2 = inprocess2(img_ready)
-    # # print(img_ready.size())
-    # # print(img2.size())
-    # #
-    # # rand_image = torch.rand(256,256,256)
-    # # frac = FractionalStridedConvBlock(256, 3, 3, 2)
-    # # ki = frac.forward(rand_image)
-    # # print(ki.size())
-    # # from PIL import Image
-    # # import torchvision.transforms as transforms
-    # # tr = transforms.ToPILImage()
-    # # imgg = tr(ki)
-    # # imgg.show()
-    #
-    # # rand_image2 =
-    # # genny = Generator(3)
-    # # genny.forward(test_image)
-    # # print("here")
-    # # print(test_image.size())
-    # # outss = genny(test_image)
-    # # import torchvision.transforms as transforms
-    # # tr = transforms.ToPILImage()
-    # # imgg = tr(outss)
-    # # imgg.show()
-    # # # test_image.show()
-    # #
-    # # imggorig = tr(test_image)
-    # # imggorig.show()
-    #
-    #
-    # # print(outss)
-    # # ResidualBlock(inter_channels * 4, inter_channels * 4, 3, 1)
-    # # inter_channels = 64
-    # # resblock_test = ResidualBlock(inter_channels * 4, inter_channels * 4, 3, 2)
-    # # img_test_torch = torch.rand(inter_channels * 4, 256, 256)
-    # # resblock_test(img_test_torch)
-    #
-    # # CHECK HOW THE SHAPE IS CHANGING FOR when I put something into the residual block
-    # # the residual convolutional layers should not change the shape/dimensions
-    # # currently dimensions are changed because of convolution layer so it cannot be added to the original image
-    # #
-    # #
-    # #
