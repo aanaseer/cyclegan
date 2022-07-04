@@ -32,8 +32,10 @@ config = {
     "learning_decay": True
 }
 
+
 def main():
     initiate_pipeline(config)
+
 
 if __name__ == "__main__":
     main()
