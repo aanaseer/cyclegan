@@ -1,6 +1,7 @@
 """Helper functions to train the machine learning model along with the training loop."""
 
 from __future__ import annotations
+
 import sys
 import os
 
@@ -23,29 +24,32 @@ from generator import Generator
 def initialise_model(configurations: wandb.sdk.wandb_config.Config
                      ) -> tuple[Generator, Generator, Discriminator,
                                 Discriminator, torch.optim.adam.Adam, torch.optim.adam.Adam,
-                                torch.nn.modules.loss.MSELoss, torch.nn.modules.loss.L1Loss]:
+                                torch.nn.modules.loss.MSELoss, torch.nn.modules.loss.L1Loss,
+                                torch.optim.lr_scheduler.LambdaLR, torch.optim.lr_scheduler.LambdaLR]:
     """Initialises the generators, discriminators, optimisers and the loss criteria.
 
     Args:
         configurations: A wandb Configuration instance. The Configuration instance provided here must have at least the,
-          "device" - The device to use, either cpu or cuda
-          "image_channels" - The number of channels in the images to be used for training
-          "learning_rate" - The learning rate for the generator and discriminator optimisers
-          "beta1" - Beta 1 value to be used with the Adam optimisation algorithm
-          "beta2" - Beta 2 value to be used with the Adam optimisation algorithm
-          "load_checkpoint" - Boolean to state whether to initialise the models from a checkpoint
-          "checkpoint_file_name" - Name of the checkpoint file from which to initialise the model
+          "device" - The device to use, either cpu or cuda;
+          "image_channels" - The number of channels in the images to be used for training;
+          "learning_rate" - The learning rate for the generator and discriminator optimisers;
+          "beta1" - Beta 1 value to be used with the Adam optimisation algorithm;
+          "beta2" - Beta 2 value to be used with the Adam optimisation algorithm;
+          "load_checkpoint" - Boolean to state whether to initialise the models from a checkpoint;
+          "checkpoint_file_name" - Name of the checkpoint file from which to initialise the model.
 
     Returns:
         A tuple containing the initialised machine learning models, optimisers, and the loss criteria as follows,
-          generator_AB - Generator for converting image A (from data set A) to image B (from data set B)
-          generator_BA - Generator for converting image B (from data set B) to image A (from data set A)
-          discriminator_A - Discriminator to determine if an image belongs to the data set A
-          discriminator_B - Discriminator to determine if an image belongs to the data set B
-          optimiser_generator - Initialised optimiser for the generators using Adam optimisation algorithm
-          optimiser_discriminator - Initialised optimiser for the discriminators using Adam optimisation algorithm
-          adversarial_loss  - An instance of Mean Squared Loss to be used during training
-          l1_loss - An instance of L1 loss to be used during training
+          generator_AB - Generator for converting image A (from data set A) to image B (from data set B);
+          generator_BA - Generator for converting image B (from data set B) to image A (from data set A);
+          discriminator_A - Discriminator to determine if an image belongs to the data set A;
+          discriminator_B - Discriminator to determine if an image belongs to the data set B;
+          optimiser_generator - Initialised optimiser for the generators using Adam optimisation algorithm;
+          optimiser_discriminator - Initialised optimiser for the discriminators using Adam optimisation algorithm;
+          adversarial_loss  - An instance of Mean Squared Loss to be used during training;
+          l1_loss - An instance of L1 loss to be used during training;
+          scheduler_generator - Learning rate decay scheduler for the generator;
+          scheduler_discriminator - Learning rate decay scheduler for the discriminator.
     """
     generator_AB = Generator(configurations.image_channels).to(configurations.device)
     generator_BA = Generator(configurations.image_channels).to(configurations.device)
@@ -75,11 +79,11 @@ def initialise_model(configurations: wandb.sdk.wandb_config.Config
         scheduler_generator = None
         scheduler_discriminator = None
 
-
     initialised = (generator_AB, generator_BA, discriminator_A, discriminator_B, optimiser_generator,
                    optimiser_discriminator, adversarial_loss, l1_loss, scheduler_generator, scheduler_discriminator)
 
     checkpoint_file = configurations.checkpoint_file_name
+
     try:
         if configurations.load_checkpoint:
             print(f"==> Loading checkpoint: {checkpoint_file}")
@@ -102,9 +106,9 @@ def initialise_dataloader(configurations: wandb.sdk.wandb_config.Config,
     """Initialises the dataloader with either the training or testing data.
 
     Args:
-        configurations: A wandb Configuration instance. The Configuration instance provided here must have at least the,
+        configurations: A wandb Configuration instance. The Configuration instance provided here must have at least,
           "data_dir" - The path to the dataset;
-          "dataset_name" - Name of the dataset (eg: horse2zebra);
+          "dataset_name" - Name of the dataset (one argument from: horse2zebra, bit2moji2simpsons, vangogh2photo);
           "image_dim" - The size to which images in the dataset should be resized to;
           "batch_size" - Batch size to be used with the data loader;
         kind: Argument supplied should be either "train" or "test", this determines whether to use train or test data.
@@ -116,7 +120,6 @@ def initialise_dataloader(configurations: wandb.sdk.wandb_config.Config,
 
     transform = transforms.Compose([
         transforms.Resize(configurations.image_dim),
-        # transforms.RandomCrop(configurations.image_dim),
         transforms.ToTensor()
     ])
 
@@ -246,8 +249,8 @@ def train(generator_AB: Generator,
           configurations: wandb.sdk.wandb_config.Config,
           adversarial_loss: torch.nn.modules.loss.MSELoss,
           l1_loss: torch.nn.modules.loss.L1Loss,
-          scheduler_generator,
-          scheduler_discriminator
+          scheduler_generator: torch.optim.lr_scheduler.LambdaLR,
+          scheduler_discriminator: torch.optim.lr_scheduler.LambdaLR
           ) -> None:
     """Starts the training loop.
 
@@ -269,19 +272,17 @@ def train(generator_AB: Generator,
           "save_checkpoint" - Boolean to require whether to save a checkpoint or not.
         adversarial_loss: An instance of Mean Squared Loss criterion.
         l1_loss: An instance of L1 loss criterion.
-        scheduler_generator:
-        scheduler_discriminator
+        scheduler_generator - Learning rate decay scheduler for the generator.
+        scheduler_discriminator - Learning rate decay scheduler for the discriminator.
     """
     wandb.watch(models=(generator_AB, generator_BA, discriminator_A, discriminator_B), log="all", log_freq=1)
     for epoch in range(configurations.epochs):
         step = 0
-        # TODO IMPLEMENT AVG LOSS LOGGING FOR GENERATOR AND DISCRIMINATOR
+        log_step = 0
+
         for idx, (imgA, imgB) in enumerate(tqdm(dataloader)):
             real_imgA = imgA.to(configurations.device)
             real_imgB = imgB.to(configurations.device)
-
-            # save_image(real_imgA * 0.5 + 0.5, f"saved_images/real_imgA_{idx}.png")
-            # save_image(real_imgB * 0.5 + 0.5, f"saved_images/real_imgB_{idx}.png")
 
             # Discriminator training
             with torch.no_grad():
@@ -296,8 +297,6 @@ def train(generator_AB: Generator,
             optimiser_discriminator.zero_grad()
             discriminator_loss.backward()
             optimiser_discriminator.step()
-            # if configurations.learning_decay:
-            #     scheduler_discriminator.step()
 
             # Generator training
             generator_adversarial_loss_AB, identity_loss_AB, cycle_consistency_loss_BAB = compute_generator_losses_one_path(
@@ -320,29 +319,25 @@ def train(generator_AB: Generator,
             optimiser_generator.zero_grad()
             generator_loss.backward()
             optimiser_generator.step()
-            # if configurations.learning_decay:
-            #     scheduler_generator.step()
 
-            print(f"\nEpoch: {epoch} | Step: {step} | Discriminator Loss: {discriminator_loss:.2f} | "
-                  f"Generator Loss: {generator_loss:.2f}")
+            if step % 20 == 0:
+                print(f"\nEpoch: {epoch} | Step: {step} | Discriminator Loss: {discriminator_loss:.2f} | "
+                      f"Generator Loss: {generator_loss:.2f}")
+                wandb.log({"epoch": epoch, "discriminator_loss": discriminator_loss, "generator_loss": generator_loss}, step=log_step)
 
-            wandb.log({"epoch": epoch, "discriminator_loss": discriminator_loss, "generator_loss": generator_loss})
+            log_step += 1
+
             if step % configurations.condition_step == 0:
-                # wandb.log({"epoch": epoch, "discriminator_loss": discriminator_loss, "generator_loss": generator_loss}, step=step)
 
                 if configurations.save_images:
-                    # ox_path = "/home/naseer/cyclegan-mmsc-special-topic/src/saved_images/"
-                    # ox_path = "saved_images/"
-                    # output_save_dir
                     IMAGES_OUTPUT_DIR = os.path.join(configurations.output_save_dir, wandb.run.name)
                     IMG_A_DIR = os.path.join(IMAGES_OUTPUT_DIR,  "images", f"{epoch}_{step}_imgA_fake.png")
                     IMG_B_DIR = os.path.join(IMAGES_OUTPUT_DIR,  "images", f"{epoch}_{step}_imgB_fake.png")
-                    # SAVE_DIR_A = os.path.join(configurations.output_save_dir, wandb.run.name, f"{epoch}_{step}_imgA_fake.png")
-                    # SAVE_DIR_B = os.path.join(configurations.output_save_dir, wandb.run.name, f"{epoch}_{step}_imgB_fake.png")
                     save_image(fake_imgA * 0.5 + 0.5, IMG_A_DIR)
                     save_image(fake_imgB * 0.5 + 0.5, IMG_B_DIR)
 
                 if configurations.save_checkpoint:
+
                     print(f"==> Saving a checkpoint, Epoch: {epoch}, Step: {step}")
                     checkpoint = {
                         "generator_AB": generator_AB.state_dict(),
@@ -353,7 +348,9 @@ def train(generator_AB: Generator,
                         "optimiser_discriminator": optimiser_discriminator.state_dict()
                     }
                     CHKPOINT_OUTPUT_DIR = os.path.join(configurations.output_save_dir, wandb.run.name, "checkpoints")
-                    CHKPOINT_FILE = os.path.join(CHKPOINT_OUTPUT_DIR, f"{configurations.dataset_name}_{wandb.run.name}_checkpoint.pth")
+                    CHKPOINT_FILE = os.path.join(CHKPOINT_OUTPUT_DIR,
+                                                 f"{configurations.dataset_name}_{wandb.run.name}_checkpoint.pth")
+
                     torch.save(checkpoint, CHKPOINT_FILE)
 
             step += 1
@@ -363,12 +360,14 @@ def train(generator_AB: Generator,
             scheduler_generator.step()
 
 
-def initialise_weights(m):
+def initialise_weights(m: nn.Module) -> None:
+    """Initialises the weights and biases of the convolutional transpose convolutional
+
+    Args:
+        m: An nn module such as a Generator or Discriminator.
+    """
     if isinstance(m, nn.Conv2d) or isinstance(m, nn.ConvTranspose2d):
         torch.nn.init.normal_(m.weight, 0.0, 0.02)
-    if isinstance(m, nn.BatchNorm2d):
-        torch.nn.init.normal_(m.weight, 0.0, 0.02)
-        torch.nn.init.constant_(m.bias, 0)
 
 
 def initiate_pipeline(configurations: dict) -> None:
@@ -393,6 +392,8 @@ def initiate_pipeline(configurations: dict) -> None:
           "load_checkpoint" - Boolean to state whether to initialise the models from a checkpoint;
           "checkpoint_file_name" - Name of the checkpoint file from which to initialise the model;
           "data_dir" - The path to the dataset;
+          "output_save_dir": The path to the directory to save outputs from the training process;
+          "learning_decay": Boolean to state whether to use learning rate decay or not.
     """
     with wandb.init(project="mmsc-python-project", config=configurations, anonymous="allow"):
         config = wandb.config
@@ -411,73 +412,3 @@ def initiate_pipeline(configurations: dict) -> None:
 
         train(generator_AB, generator_BA, discriminator_A, discriminator_B, optimiser_generator, optimiser_discriminator,
               dataloader_train, config, adversarial_loss, l1_loss, scheduler_generator, scheduler_discriminator)
-
-# TODO check generator losses DONE
-# TODO wrap in WANDB API DONE
-# TODO side by side image comparision
-# TODO losses and epochs to be printed in console  DONE
-# TODO state dicts download and load DONE
-# TODO paths for saving the model even without pre-made directory
-# TODO repeated parameters to be resolved using a decorator
-
-if __name__ == "__main__":
-    pass
-    # print(dataset[0][0].size()[0])
-    # pipeline(config)
-    # initiate_pipeline(config)
-    # config = {
-    #     "dataset_name": "horse2zebra",
-    #     "image_dim": 256,
-    #     "image_channels": 3,
-    #     "learning_rate": 0.0002,
-    #     "beta1": 0.5,
-    #     "beta2": 0.999,
-    #     "device": torch.device("cuda" if torch.cuda.is_available() else "cpu"),
-    #     "batch_size": 1,
-    #     "lambda_cycle": 10,
-    #     "lambda_identity": 0.1,
-    #     "condition_step": 20,
-    #     "save_checkpoint": False,
-    #     "save_images": True,
-    #     "epochs": 150,
-    #     "load_checkpoint": False,
-    #     "checkpoint_file_name": "checkpoint.pth",
-    #     "data_dir": DATA_DIR
-    # }
-    #
-    # wandbinit = wandb.init(project="type-test", config=config, anonymous="allow")
-    # config = wandbinit.config
-    # (generator_AB, generator_BA, discriminator_A, discriminator_B, optimiser_generator,
-    #  optimiser_discriminator, adversarial_loss, l1_loss) = initialise_model(config)
-    # # print(initialised)
-    #
-    # dataloader1 = initialise_dataloader(config, "train")
-    #
-    # real_imgA = torch.rand(3,256,256)
-    # fake_imgA = torch.rand(3, 256, 256)
-    # fake_imgB = torch.rand(3, 256, 256)
-    #
-    # disc_loss = compute_discriminator_loss(real_imgA, fake_imgA, discriminator_A, adversarial_loss)
-    # print(type(disc_loss))
-    # print("--GENERATOR LOSSES-adversarial")
-    # t, v = compute_generator_adversarial_loss(real_imgA, discriminator_B, generator_AB, adversarial_loss)
-    # print(type(t))
-    # print(type(v))
-    #
-    # print("--GENERATOR LOSSES-identity")
-    # gen_iden_loss = compute_generator_identity_loss(real_imgA, generator_BA, l1_loss)
-    # print(type(gen_iden_loss))
-    #
-    # print("--GENERATOR LOSSES-cycle")
-    # cycl_loss = compute_cycle_consistency_loss(real_imgA, fake_imgB, generator_BA, l1_loss)
-    # print(type(cycl_loss))
-    #
-    # print("--GENERATOR LOSSES-onepath")
-    # l1g, l2g, l3g  = compute_generator_losses_one_path(real_imgA, discriminator_B,
-    #                                                    generator_AB, generator_BA, adversarial_loss, l1_loss)
-    # print(type(l1g))
-    # print(type(l2g))
-    # print(type(l3g))
-    #
-    # train(generator_AB, generator_BA, discriminator_A, discriminator_B, optimiser_generator, optimiser_discriminator,
-    #       dataloader1, config, adversarial_loss, l1_loss)
