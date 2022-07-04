@@ -5,14 +5,14 @@ Code in this repository is submitted as part of an assignment for the Oxford Tri
 [Python in Scientific Computing](https://courses.maths.ox.ac.uk/course/view.php?id=252).
 
 ## Installation and Running
-1. Download the zip file containing preconfigured directories and datasets using from [here](https://drive.google.com/file/d/1OUuYDjaqEvZPP6Jrnc8IIpTjwyCY_zfE/view?usp=sharing). 
-2. Extract the zip file (and all the other zip files within) and place contents inside the root directory.
+1. Download the zip file containing preconfigured directories and datasets from [here](https://drive.google.com/file/d/1OUuYDjaqEvZPP6Jrnc8IIpTjwyCY_zfE/view?usp=sharing). 
+2. Extract the zip file (and all other zip files within) and place contents inside the root directory.
 3. Set up a virtual environment and install the dependencies using the requirements.txt file by running
     ```
     pip install -r requirements.txt
     ```
 4. Amend the configurations dictionary as required in the file train.py.   
-5. Train a model by running by choosing a relevant GPU device with the following command
+5. Train a model by choosing a relevant GPU device with the following command
     ```
     CUDA_VISIBLE_DEVICES=[GPU device] python src/train.py
     ```
