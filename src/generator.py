@@ -133,20 +133,20 @@ class Generator(nn.Module):
         """
         super(Generator, self).__init__()
         self.gen = nn.Sequential(OrderedDict([
-            ('c7s1-64', ConvolutionBlock(in_channels, inter_channels, 7, 1, 3)),  # 3, 64
-            ('d128', ConvolutionBlock(inter_channels, inter_channels * 2, 3, 2, 1)),  # 64, 128
-            ('d256', ConvolutionBlock(inter_channels * 2, inter_channels * 4, 3, 2, 1)),  # 128, 256
-            ('R256-1', ResidualBlock(inter_channels * 4, inter_channels * 4)),  # 256, 256
-            ('R256-2', ResidualBlock(inter_channels * 4, inter_channels * 4)),  # 256, 256
-            ('R256-3', ResidualBlock(inter_channels * 4, inter_channels * 4)),  # 256, 256
-            ('R256-4', ResidualBlock(inter_channels * 4, inter_channels * 4)),  # 256, 256
-            ('R256-5', ResidualBlock(inter_channels * 4, inter_channels * 4)),  # 256, 256
-            ('R256-6', ResidualBlock(inter_channels * 4, inter_channels * 4)),  # 256, 256
-            ('R256-7', ResidualBlock(inter_channels * 4, inter_channels * 4)),  # 256, 256
-            ('R256-8', ResidualBlock(inter_channels * 4, inter_channels * 4)),  # 256, 256
-            ('R256-9', ResidualBlock(inter_channels * 4, inter_channels * 4)),  # 256, 256
-            ('u128', FractionalStridedConvBlock(inter_channels * 4, inter_channels * 2, 3, 2)),  # 256, 128
-            ('u64', FractionalStridedConvBlock(inter_channels * 2, inter_channels, 3, 2)),  # 128, 64
+            ('c7s1-64', ConvolutionBlock(in_channels, inter_channels, 7, 1, 3)),
+            ('d128', ConvolutionBlock(inter_channels, inter_channels * 2, 3, 2, 1)),
+            ('d256', ConvolutionBlock(inter_channels * 2, inter_channels * 4, 3, 2, 1)),
+            ('R256-1', ResidualBlock(inter_channels * 4, inter_channels * 4)),
+            ('R256-2', ResidualBlock(inter_channels * 4, inter_channels * 4)),
+            ('R256-3', ResidualBlock(inter_channels * 4, inter_channels * 4)),
+            ('R256-4', ResidualBlock(inter_channels * 4, inter_channels * 4)),
+            ('R256-5', ResidualBlock(inter_channels * 4, inter_channels * 4)),
+            ('R256-6', ResidualBlock(inter_channels * 4, inter_channels * 4)),
+            ('R256-7', ResidualBlock(inter_channels * 4, inter_channels * 4)),
+            ('R256-8', ResidualBlock(inter_channels * 4, inter_channels * 4)),
+            ('R256-9', ResidualBlock(inter_channels * 4, inter_channels * 4)),
+            ('u128', FractionalStridedConvBlock(inter_channels * 4, inter_channels * 2, 3, 2)),
+            ('u64', FractionalStridedConvBlock(inter_channels * 2, inter_channels, 3, 2)),
             ('c7s1-3', nn.Conv2d(inter_channels, in_channels, 7, 1, 3))
         ]))
 
