@@ -323,7 +323,8 @@ def train(generator_AB: Generator,
             if step % 20 == 0:
                 print(f"\nEpoch: {epoch} | Step: {step} | Discriminator Loss: {discriminator_loss:.2f} | "
                       f"Generator Loss: {generator_loss:.2f}")
-                wandb.log({"epoch": epoch, "discriminator_loss": discriminator_loss, "generator_loss": generator_loss}, step=log_step)
+                wandb.log({"epoch": epoch, "discriminator_loss": discriminator_loss, "generator_loss": generator_loss},
+                          step=log_step)
 
             log_step += 1
 
