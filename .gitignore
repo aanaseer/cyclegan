@@ -278,3 +278,5 @@ run*
 src/saved_images
 data
 src/checkpoint.pth
+
+.idea
