@@ -84,3 +84,4 @@ class Discriminator(nn.Module):
 
         """
         return self.disc(x)
+    
