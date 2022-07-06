@@ -6,6 +6,6 @@ setup(
     license="None",
     description="CycleGAN for MMSC Special Topic",
     long_description=open("README.md").read(),
-    url="https://github.com/aanaseer/cyclegan-mmsc-special-topic/",
+    url="https://github.com/aanaseer/cyclegan/",
     author="A. A. Naseer"
 )
