@@ -37,3 +37,7 @@ required settings and by running,
 
 ## Pre-trained Models
 Pre-trained models can be downloaded from [here](https://drive.google.com/drive/folders/1zsF6Yqa-m-sAeeenH5wU4TfsmKwa5qk_?usp=sharing).
+
+#### Notes
+* Hyperparameter tuning was not done for the model.
+* Report submitted with this repository will be made available at a future date.
