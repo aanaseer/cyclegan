@@ -1,8 +1,12 @@
 # CycleGAN
 
 This is repository contains a re-implementation of the CycleGAN architecture found in [[1]](https://arxiv.org/abs/1703.10593). 
-Code in this repository is submitted as part of an assignment for the Oxford Trinity Term 2022 
+Code in this repository was submitted as part of an assignment for the Oxford Trinity Term 2022 
 [Python in Scientific Computing](https://courses.maths.ox.ac.uk/course/view.php?id=252).
+
+### Example
+Generating a Van Gogh painting from a photograph and converting it back to a photograph.
+![](images/example.png)
 
 ## Installation and Running
 1. Download the zip file containing preconfigured directories and datasets from [here](https://drive.google.com/file/d/1OUuYDjaqEvZPP6Jrnc8IIpTjwyCY_zfE/view?usp=sharing). 
@@ -18,7 +22,7 @@ Code in this repository is submitted as part of an assignment for the Oxford Tri
     ```
    To run without a GPU use,
     ```
-    python train.py
+    python src/train.py
     ```
 6. Run evaluations by adjusting the configurations dictionary in evaluate.py according to the 
 required settings and by running,
