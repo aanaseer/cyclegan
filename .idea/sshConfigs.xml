@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="SshConfigs">
-    <configs>
-      <sshConfig authType="PASSWORD" host="gate.maths.ox.ac.uk" id="897c145d-2cc1-4678-be70-3572abb14e10" port="22" nameFormat="DESCRIPTIVE" username="naseer" useOpenSSHConfig="true" />
-    </configs>
-  </component>
-</project>
