@@ -1,8 +1,6 @@
 # CycleGAN
 
-This is repository contains a re-implementation of the CycleGAN architecture found in [[1]](https://arxiv.org/abs/1703.10593). 
-Code in this repository was submitted as part of an assignment for the Oxford Trinity Term 2022 
-[Python in Scientific Computing](https://courses.maths.ox.ac.uk/course/view.php?id=252).
+This is repository contains a re-implementation of the CycleGAN architecture found in [[1]](https://arxiv.org/abs/1703.10593).
 
 Experiment tracking was done using Weights and Biases (`wandb`), selected runs are made public [here](https://wandb.ai/aanaseer/cyclegan-mmsc-special-topic/).
 
