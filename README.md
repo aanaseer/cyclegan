@@ -2,7 +2,7 @@
 
 This is repository contains a re-implementation of the CycleGAN architecture found in [[1]](https://arxiv.org/abs/1703.10593).
 
-Experiment tracking was done using Weights and Biases (`wandb`), selected runs are made public [here](https://wandb.ai/aanaseer/cyclegan-mmsc-special-topic/).
+Experiment tracking was done using Weights and Biases (`wandb`), selected runs are made public [here](https://wandb.ai/aanaseer/cyclegan/).
 
 ### Example
 Generating a Van Gogh painting from a photograph and converting it back to a photograph.
