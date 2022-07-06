@@ -4,6 +4,8 @@ This is repository contains a re-implementation of the CycleGAN architecture fou
 Code in this repository was submitted as part of an assignment for the Oxford Trinity Term 2022 
 [Python in Scientific Computing](https://courses.maths.ox.ac.uk/course/view.php?id=252).
 
+Experiment tracking was done using Weights and Biases (`wandb`), selected runs are made public [here](https://wandb.ai/aanaseer/cyclegan-mmsc-special-topic/).
+
 ### Example
 Generating a Van Gogh painting from a photograph and converting it back to a photograph.
 ![](images/example.png)
