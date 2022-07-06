@@ -40,4 +40,3 @@ Pre-trained models can be downloaded from [here](https://drive.google.com/drive/
 
 #### Notes
 * Hyperparameter tuning was not done for the model.
-* Report submitted with this repository will be made available at a future date.
