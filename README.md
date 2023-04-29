@@ -1,6 +1,6 @@
 # CycleGAN
 
-This is repository contains a re-implementation of the CycleGAN architecture found in [[1]](https://arxiv.org/abs/1703.10593).
+This repository contains a re-implementation of the CycleGAN architecture found in [[1]](https://arxiv.org/abs/1703.10593).
 
 Experiment tracking was done using Weights and Biases (`wandb`), selected runs are made public [here](https://wandb.ai/aanaseer/cyclegan/).
 
